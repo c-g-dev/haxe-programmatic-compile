@@ -1,7 +1,7 @@
 
 import haxe.io.Path;
 import sys.FileSystem;
-import HaxeProgrammaticCompile;
+import hpc.HaxeProgrammaticCompile;
 
 class Test {
 	static function main() {

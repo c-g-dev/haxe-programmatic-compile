@@ -1,4 +1,4 @@
-package;
+package hpc;
 
 import haxe.io.Path;
 using StringTools;
@@ -9,18 +9,6 @@ import sys.io.Process;
 import js.node.ChildProcess;
 #end
 
-/**
-	Utility for on-demand, programmatic Haxe builds.
-	
-	- createTempProject(sourceDir, ?injectFiles): copies a project into a unique temp folder and returns the new directory.
-	- runBuild(projectDir): runs `haxe build.hxml` in that directory and returns the path to the produced artifact (file or directory depending on target).
-	
-	Notes:
-	- This utility assumes a `build.hxml` exists in the project root.
-	- Output path is derived from the first target directive found in `build.hxml` (e.g. -js, -lua, -cpp, -cs, -java, -php, -python, -neko, -hl, -swf, -jvm, -as3, -cppia).
-	- For directory-based targets (e.g. -cpp, -cs, -java, -php, -jvm, -as3), the returned path is the output directory.
-	- No exceptions are caught by design (fail fast).
-*/
 class HaxeProgrammaticCompile {
 	public static var tempRootOverride:String = null;
 	public static function createTempProject(sourceProjectDir:String, ?injectFiles:Map<String, String>):String {
@@ -87,19 +75,16 @@ class HaxeProgrammaticCompile {
 			if (line.length == 0) continue;
 			if (StringTools.startsWith(line, "#")) continue;
 			
-			// Accept tokens of the form: -flag <value>
 			final spaceIdx = line.indexOf(" ");
 			final flag = spaceIdx == -1 ? line : line.substr(0, spaceIdx);
 			final value = spaceIdx == -1 ? "" : line.substr(spaceIdx + 1).trim();
 			
-			// File-based outputs
 			if (flag == "-js" || flag == "-lua" || flag == "-swf" || flag == "-hl" || flag == "-neko" || flag == "-python" || flag == "-cppia") {
 				if (value == "") throw 'Missing output path for ' + flag + ' in ' + hxmlPath;
 				Sys.println("[build] parse target: " + flag + " -> " + value);
 				return { kind: "file", path: value };
 			}
 			
-			// Directory-based outputs
 			if (flag == "-cpp" || flag == "-cs" || flag == "-java" || flag == "-php" || flag == "-jvm" || flag == "-as3") {
 				if (value == "") throw 'Missing output path for ' + flag + ' in ' + hxmlPath;
 				Sys.println("[build] parse target: " + flag + " -> " + value);
@@ -166,7 +151,7 @@ class HaxeProgrammaticCompile {
 		if (isWindows) {
 			final t = Sys.getEnv("TEMP");
 			if (t != null && t != "") return normalizeDir(t);
-			final tmp = "C:\\\\Windows\\\\Temp";
+			final tmp = "C:\\Windows\\Temp";
 			return normalizeDir(tmp);
 		} else {
 			final t = Sys.getEnv("TMPDIR");
@@ -194,5 +179,6 @@ class HaxeProgrammaticCompile {
 		return Path.withoutDirectory(withoutSlash);
 	}
 }
+
 
 

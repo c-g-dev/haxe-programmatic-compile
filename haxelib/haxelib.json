@@ -1,0 +1,17 @@
+{
+  "name": "haxe-programmatic-compile",
+  "url" : "https://github.com/c-g-dev/haxe-programmatic-compile",
+  "description": "Utility for on-demand, programmatic Haxe builds",
+  "license": "MIT",
+  "tags": [
+    "haxe", "util"
+  ],
+  "classPath": "src",
+  "contributors": [
+    "cgdev"
+  ],
+  "releasenote": "Initial release",
+  "version": "1.0.0",
+  "dependencies": {
+  }
+}
