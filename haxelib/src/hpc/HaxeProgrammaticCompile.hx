@@ -40,15 +40,13 @@ class HaxeProgrammaticCompile {
 	
 	public static function runBuild(projectDir:String):String {
 		final normalizedDir = normalizeDir(projectDir);
-		final hxmlPath = Path.join([normalizedDir, "build.hxml"]);
-		if (!FileSystem.exists(hxmlPath)) {
-			throw 'build.hxml not found in: ' + normalizedDir;
-		}
+		final hxmlPath = findSingleHxmlInDir(normalizedDir);
 		
 		Sys.println("[build] runBuild: dir=" + normalizedDir + " hxml=" + hxmlPath);
 		final target = parseFirstOutputTarget(hxmlPath);
 		Sys.println("[build] Target detected: kind=" + target.kind + " path=" + target.path);
-		final result = runHaxeBuildInDir(normalizedDir);
+		final hxmlFileName = Path.withoutDirectory(hxmlPath);
+		final result = runHaxeBuildInDir(normalizedDir, hxmlFileName);
 		Sys.println("[build] Haxe finished with code=" + result.code + " stdoutLen=" + (result.stdout != null ? result.stdout.length : 0) + " stderrLen=" + (result.stderr != null ? result.stderr.length : 0));
 		if (result.code != 0) {
 			final message = [
@@ -95,17 +93,17 @@ class HaxeProgrammaticCompile {
 		throw 'No output target found in ' + hxmlPath;
 	}
 	
-	static function runHaxeBuildInDir(projectDir:String):{ code:Int, stdout:String, stderr:String } {
+	static function runHaxeBuildInDir(projectDir:String, hxmlFileName:String):{ code:Int, stdout:String, stderr:String } {
 		final prevCwd = Sys.getCwd();
 		Sys.setCwd(projectDir);
 		#if js
-		final res:Dynamic = ChildProcess.spawnSync("haxe", ["build.hxml"], { encoding: "utf8" });
+		final res:Dynamic = ChildProcess.spawnSync("haxe", [hxmlFileName], { encoding: "utf8" });
 		Sys.setCwd(prevCwd);
 		final code = res.status == null ? (res.error != null ? 1 : 0) : res.status;
 		Sys.println("[build] Exit code: " + code);
 		return { code: code, stdout: Std.string(res.stdout), stderr: Std.string(res.stderr) };
 		#else
-		final p = new Process("haxe", ["build.hxml"]);
+		final p = new Process("haxe", [hxmlFileName]);
 		final out = p.stdout.readAll().toString();
 		final err = p.stderr.readAll().toString();
 		final code = p.exitCode();
@@ -114,6 +112,26 @@ class HaxeProgrammaticCompile {
 		Sys.println("[build] Exit code: " + code);
 		return { code: code, stdout: out, stderr: err };
 		#end
+	}
+	
+	static function findSingleHxmlInDir(projectDir:String):String {
+		var hxmlFiles:Array<String> = [];
+		for (entry in FileSystem.readDirectory(projectDir)) {
+			final lower = entry.toLowerCase();
+			if (lower.endsWith(".hxml")) {
+				hxmlFiles.push(entry);
+			}
+		}
+		
+		if (hxmlFiles.length == 0) {
+			throw 'No .hxml file found in: ' + projectDir;
+		}
+		
+		if (hxmlFiles.length > 1) {
+			throw 'Multiple .hxml files found in: ' + projectDir + ' (' + hxmlFiles.join(", ") + ')';
+		}
+		
+		return Path.join([projectDir, hxmlFiles[0]]);
 	}
 	
 	static function copyRecursive(source:String, destination:String):Void {

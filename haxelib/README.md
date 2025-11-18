@@ -21,7 +21,7 @@ class Example {
         // 1) Optionally override where temp projects are created (defaults to OS temp dir)
         HaxeProgrammaticCompile.tempRootOverride = Path.join([Sys.getCwd(), ".tmp-builds"]);
 
-        // 2) Point at an existing Haxe project that contains a `build.hxml`
+        // 2) Point at an existing Haxe project that contains a `.hxml`
         final srcProjectDir = Path.join([Sys.getCwd(), "my-project"]);
 
         // 3) Create a unique temp copy of that project
